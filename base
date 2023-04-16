@@ -1,0 +1,42 @@
+import pandas as pd
+import numpy as np
+from itertools import combinations
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+from sklearn.preprocessing import PolynomialFeatures
+
+# Read the Excel sheet into a pandas DataFrame
+df = pd.read_excel("gdp2.xlsx")
+
+# Extract the dependent variable
+y = df.iloc[:, 1]
+
+# Set the minimum R-squared score for the polynomial regression model
+min_r2 = 0.5
+
+# Iterate over all possible combinations of columns for X until the minimum R-squared score is reached
+for k in range(2, df.shape[1]-1):
+    for X_cols in combinations(df.columns[2:-1], k):
+        # Extract the independent variables for the current combination of columns
+        X = df.loc[:, X_cols]
+
+        # Fit the polynomial regression model
+        poly = PolynomialFeatures(degree=2)
+        X_poly = poly.fit_transform(X)
+        model = LinearRegression().fit(X_poly, y)
+
+        # Compute the R-squared score for the polynomial regression model
+        y_pred = model.predict(X_poly)
+        r2 = r2_score(y, y_pred)
+
+        # If the R-squared score is greater than the minimum, print the regression coefficients and break out of the loop
+        if r2 >= min_r2:
+            print(f"X columns: {X_cols}")
+            print(f"Polynomial Regression Intercept: {model.intercept_}")
+            print(f"Polynomial Regression Coefficients: {model.coef_}")
+            print(f"Polynomial Regression R-Squared Score: {r2}")
+            break
+
+    # If the R-squared score is greater than the minimum, break out of the outer loop
+    if r2 >= min_r2:
+        break
